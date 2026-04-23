@@ -1,150 +1,66 @@
-local DataStoreService = game:GetService("DataStoreService")
-local AccountStore = DataStoreService:GetDataStore("AccountHubV1")
+-- Tạo ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "UserAliasUI"
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
-game.ReplicatedStorage:WaitForChild("SaveAccount").OnServerEvent:Connect(function(player, data)
-	AccountStore:SetAsync(player.UserId, data)
-end)
+-- Tạo Frame chính (Bảng menu)
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 200)
+frame.Position = UDim2.new(0.5, -150, 0.5, -100)
+frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
 
-game.ReplicatedStorage:WaitForChild("LoadAccount").OnServerInvoke = function(player)
-	local data = AccountStore:GetAsync(player.UserId)
-	return data or {}
-end
-local player = game.Players.LocalPlayer
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
+-- Bo góc cho Frame
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
 
--- Remote
-local SaveEvent = Instance.new("RemoteEvent", ReplicatedStorage)
-SaveEvent.Name = "SaveAccount"
+-- Ô nhập Username
+local userBox = Instance.new("TextBox")
+userBox.Size = UDim2.new(0, 250, 0, 40)
+userBox.Position = UDim2.new(0.5, -125, 0.2, 0)
+userBox.PlaceholderText = "Nhập Username..."
+userBox.Text = ""
+userBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+userBox.TextColor3 = Color3.new(1, 1, 1)
+userBox.Parent = frame
 
-local LoadFunc = Instance.new("RemoteFunction", ReplicatedStorage)
-LoadFunc.Name = "LoadAccount"
+-- Ô nhập Alias (Biệt hiệu)
+local aliasBox = Instance.new("TextBox")
+aliasBox.Size = UDim2.new(0, 250, 0, 40)
+aliasBox.Position = UDim2.new(0.5, -125, 0.45, 0)
+aliasBox.PlaceholderText = "Nhập Alias (Biệt danh)..."
+aliasBox.Text = ""
+aliasBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+aliasBox.TextColor3 = Color3.new(1, 1, 1)
+aliasBox.Parent = frame
 
--- GUI
-local gui = Instance.new("ScreenGui", player.PlayerGui)
+-- Nút Xác nhận
+local submitBtn = Instance.new("TextButton")
+submitBtn.Size = UDim2.new(0, 100, 0, 40)
+submitBtn.Position = UDim2.new(0.5, -50, 0.75, 0)
+submitBtn.Text = "XÁC NHẬN"
+submitBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 127)
+submitBtn.TextColor3 = Color3.new(1, 1, 1)
+submitBtn.Font = Enum.Font.SourceSansBold
+submitBtn.Parent = frame
 
--- Blur nền
-local blur = Instance.new("BlurEffect")
-blur.Size = 15
-blur.Parent = game.Lighting
-
--- MAIN
-local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 500, 0, 400)
-main.Position = UDim2.new(0.5, -250, 0.5, -200)
-main.BackgroundColor3 = Color3.fromRGB(20,20,20)
-
--- Animation mở
-main.Size = UDim2.new(0,0,0,0)
-TweenService:Create(main, TweenInfo.new(0.5), {
-	Size = UDim2.new(0,500,0,400)
-}):Play()
-
--- SIDEBAR
-local sidebar = Instance.new("Frame", main)
-sidebar.Size = UDim2.new(0, 120, 1, 0)
-sidebar.BackgroundColor3 = Color3.fromRGB(30,30,30)
-
-local title = Instance.new("TextLabel", sidebar)
-title.Text = "HUB"
-title.Size = UDim2.new(1,0,0,50)
-title.TextColor3 = Color3.new(1,1,1)
-title.BackgroundTransparency = 1
-
--- SEARCH
-local search = Instance.new("TextBox", main)
-search.PlaceholderText = "Search..."
-search.Position = UDim2.new(0,130,0,10)
-search.Size = UDim2.new(0,350,0,35)
-
--- INPUT
-local userBox = Instance.new("TextBox", main)
-userBox.PlaceholderText = "Username"
-userBox.Position = UDim2.new(0,130,0,60)
-userBox.Size = UDim2.new(0,170,0,35)
-
-local aliasBox = Instance.new("TextBox", main)
-aliasBox.PlaceholderText = "Alias"
-aliasBox.Position = UDim2.new(0,310,0,60)
-aliasBox.Size = UDim2.new(0,170,0,35)
-
--- BUTTON ADD
-local addBtn = Instance.new("TextButton", main)
-addBtn.Text = "ADD"
-addBtn.Position = UDim2.new(0,130,0,110)
-addBtn.Size = UDim2.new(0,350,0,35)
-addBtn.BackgroundColor3 = Color3.fromRGB(0,170,255)
-
--- LIST
-local list = Instance.new("ScrollingFrame", main)
-list.Position = UDim2.new(0,130,0,160)
-list.Size = UDim2.new(0,350,0,220)
-list.CanvasSize = UDim2.new(0,0,0,0)
-
-local layout = Instance.new("UIListLayout", list)
-
--- DATA
-local accounts = LoadFunc:InvokeServer() or {}
-
--- CREATE ITEM
-local function createItem(data)
-	local item = Instance.new("Frame", list)
-	item.Size = UDim2.new(1,0,0,40)
-	item.BackgroundColor3 = Color3.fromRGB(50,50,50)
-
-	local label = Instance.new("TextLabel", item)
-	label.Size = UDim2.new(0.6,0,1,0)
-	label.Text = data.username.." ("..data.alias..")"
-	label.BackgroundTransparency = 1
-	label.TextColor3 = Color3.new(1,1,1)
-
-	-- EDIT
-	local edit = Instance.new("TextButton", item)
-	edit.Text = "Edit"
-	edit.Size = UDim2.new(0.2,0,1,0)
-	edit.Position = UDim2.new(0.6,0,0,0)
-
-	edit.MouseButton1Click:Connect(function()
-		userBox.Text = data.username
-		aliasBox.Text = data.alias
-		item:Destroy()
-	end)
-
-	-- DELETE
-	local del = Instance.new("TextButton", item)
-	del.Text = "X"
-	del.Size = UDim2.new(0.2,0,1,0)
-	del.Position = UDim2.new(0.8,0,0,0)
-
-	del.MouseButton1Click:Connect(function()
-		item:Destroy()
-	end)
-end
-
--- LOAD DATA
-for _,v in pairs(accounts) do
-	createItem(v)
-end
-
--- ADD
-addBtn.MouseButton1Click:Connect(function()
-	local data = {
-		username = userBox.Text,
-		alias = aliasBox.Text
-	}
-
-	table.insert(accounts, data)
-	createItem(data)
-
-	SaveEvent:FireServer(accounts)
-end)
-
--- SEARCH
-search:GetPropertyChangedSignal("Text"):Connect(function()
-	for _,item in pairs(list:GetChildren()) do
-		if item:IsA("Frame") then
-			local txt = item.TextLabel.Text:lower()
-			item.Visible = string.find(txt, search.Text:lower()) ~= nil
-		end
+-- Xử lý sự kiện khi nhấn nút
+submitBtn.MouseButton1Click:Connect(function()
+	local username = userBox.Text
+	local alias = aliasBox.Text
+	
+	if username ~= "" and alias ~= "" then
+		print("--- Thông tin đã nhận ---")
+		print("Username: " .. username)
+		print("Alias: " .. alias)
+		
+		-- Thông báo cho người dùng (tùy chọn)
+		submitBtn.Text = "Thành công!"
+		wait(1)
+		submitBtn.Text = "XÁC NHẬN"
+	else
+		warn("Vui lòng nhập đầy đủ thông tin!")
 	end
 end)
